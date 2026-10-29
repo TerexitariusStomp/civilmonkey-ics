@@ -1,0 +1,26 @@
+name: update-ics
+
+on:
+  schedule:
+    - cron: "30 9 * * *"   # daily ~09:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python3 civilmonkey_ics.py build --pages 3 --quiet
+      - name: commit changes
+        run: |
+          git config user.name "civilmonkey-ics-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add civilmonkey.ics .civilmonkey_state.json
+          git diff --cached --quiet || git commit -m "update feed $(date -u +%Y-%m-%d)"
+          git push
